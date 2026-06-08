@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crew Meetup 🪩</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f0f0f;
+      color: #f0f0f0;
+      min-height: 100vh;
+    }
+    header {
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      border-bottom: 1px solid #ffffff18;
+      padding: 28px 32px;
+      text-align: center;
+    }
+    header h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.5px; }
+    header p  { margin-top: 6px; color: #aaa; font-size: 0.95rem; }
+    .event-pills {
+      display: flex; gap: 10px; justify-content: center;
+      margin-top: 14px; flex-wrap: wrap;
+    }
+    .pill {
+      background: #ffffff12; border: 1px solid #ffffff20;
+      border-radius: 999px; padding: 5px 14px;
+      font-size: 0.82rem; color: #ccc;
+    }
+    .layout {
+      display: grid; grid-template-columns: 1fr 1fr;
+      max-width: 1100px; margin: 0 auto;
+      padding: 32px 24px; gap: 24px;
+    }
+    @media (max-width: 720px) { .layout { grid-template-columns: 1fr; } }
+    .card {
+      background: #1a1a1a; border: 1px solid #2a2a2a;
+      border-radius: 16px; padding: 28px;
+    }
+    .card h2 { font-size: 1.05rem; font-weight: 600; margin-bottom: 20px; color: #eee; }
+    .form-group { margin-bottom: 16px; }
+    label {
+      display: block; font-size: 0.82rem; color: #888;
+      margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    input[type="text"], textarea {
+      width: 100%; background: #111; border: 1px solid #333;
+      border-radius: 8px; color: #f0f0f0; font-size: 0.95rem;
+      padding: 10px 12px; outline: none;
+      transition: border-color 0.15s; font-family: inherit;
+    }
+    input[type="text"]:focus, textarea:focus { border-color: #6c63ff; }
+    textarea { resize: vertical; min-height: 70px; }
+    .radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
+    .radio-group label {
+      display: flex; align-items: center; gap: 6px;
+      background: #111; border: 1px solid #333; border-radius: 8px;
+      padding: 8px 14px; cursor: pointer; font-size: 0.9rem;
+      text-transform: none; letter-spacing: 0; color: #ccc;
+      transition: border-color 0.15s, background 0.15s; margin: 0;
+    }
+    .radio-group input[type="radio"] { display: none; }
+    .radio-group label.selected {
+      border-color: #6c63ff; background: #6c63ff18; color: #fff;
+    }
+    button[type="submit"] {
+      width: 100%; background: #6c63ff; color: #fff; border: none;
+      border-radius: 8px; padding: 12px; font-size: 1rem;
+      font-weight: 600; cursor: pointer; margin-top: 6px;
+      font-family: inherit; transition: background 0.15s, transform 0.1s;
+    }
+    button[type="submit"]:hover  { background: #5a52e0; }
+    button[type="submit"]:active { transform: scale(0.98); }
+    button[type="submit"]:disabled { background: #444; cursor: not-allowed; }
+    .success-msg {
+      display: none; text-align: center; padding: 16px;
+      border-radius: 8px; background: #1a3a2a;
+      border: 1px solid #2d6a4a; color: #6fcf97;
+      font-size: 0.95rem; margin-top: 12px;
+    }
+    .editing-banner {
+      display: none; background: #2a2a4a; border: 1px solid #4a4aaa;
+      border-radius: 8px; padding: 10px 14px;
+      font-size: 0.85rem; color: #a0a0ff; margin-bottom: 16px;
+    }
+    .editing-banner.visible { display: block; }
+    .cancel-edit {
+      background: none; border: none; color: #f08080;
+      cursor: pointer; font-size: 0.82rem;
+      margin-left: 8px; text-decoration: underline; font-family: inherit;
+    }
+    .count-label { font-size: 0.8rem; color: #555; margin-bottom: 14px; }
+    .count-label span { color: #888; font-weight: 600; }
+    #guest-list { display: flex; flex-direction: column; gap: 12px; }
+    .guest-card {
+      background: #111; border: 1px solid #2a2a2a;
+      border-radius: 10px; padding: 14px 16px; animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .guest-name {
+      font-weight: 600; font-size: 0.97rem;
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+    .status-badge {
+      font-size: 0.72rem; padding: 2px 8px;
+      border-radius: 999px; font-weight: 500;
+    }
+    .status-yes   { background: #1a3a2a; color: #6fcf97; }
+    .status-maybe { background: #3a2e1a; color: #f2994a; }
+    .status-no    { background: #2a1a1a; color: #eb5757; }
+    .guest-meta {
+      margin-top: 7px; font-size: 0.85rem; color: #888;
+      display: flex; flex-direction: column; gap: 3px;
+    }
+    .guest-meta span { display: flex; align-items: flex-start; gap: 6px; }
+    .allergy-tag {
+      display: inline-block; background: #3a1a1a; color: #f08080;
+      border-radius: 4px; padding: 1px 6px; font-size: 0.78rem; margin-top: 4px;
+    }
+    .empty-state { text-align: center; color: #444; font-size: 0.9rem; padding: 32px 0; }
+    .guest-actions { display: flex; gap: 8px; margin-top: 10px; }
+    .btn-edit, .btn-delete {
+      border: none; border-radius: 6px; padding: 5px 12px;
+      font-size: 0.8rem; font-weight: 600; cursor: pointer;
+      font-family: inherit; transition: opacity 0.15s;
+    }
+    .btn-edit   { background: #2a2a4a; color: #a0a0ff; }
+    .btn-delete { background: #3a1a1a; color: #f08080; }
+    .btn-edit:hover, .btn-delete:hover { opacity: 0.75; }
+
+    /* ── Replies ── */
+    .replies-section {
+      margin-top: 10px; padding-top: 10px; border-top: 1px solid #2a2a2a;
+    }
+    .reply-item {
+      display: flex; gap: 8px; font-size: 0.83rem;
+      margin-bottom: 5px; line-height: 1.4;
+    }
+    .reply-name         { color: #a0a0ff; font-weight: 600; white-space: nowrap; }
+    .reply-name.creator { color: #0ABAB5; font-weight: 700; }   /* Tiffany blue */
+    .reply-text         { color: #bbb; }
+
+    /* Toggle button — always visible */
+    .btn-reply-toggle {
+      background: none; border: none; color: #555;
+      font-size: 0.78rem; cursor: pointer; font-family: inherit;
+      padding: 4px 0; margin-top: 6px;
+      transition: color 0.15s;
+    }
+    .btn-reply-toggle:hover { color: #aaa; }
+
+    /* Reply form — hidden until toggled */
+    .reply-form {
+      display: none; gap: 6px; margin-top: 8px;
+    }
+    .reply-form.open { display: flex; }
+    .reply-input {
+      flex: 1; background: #0d0d0d; border: 1px solid #333;
+      border-radius: 6px; color: #f0f0f0; font-size: 0.85rem;
+      padding: 6px 10px; outline: none; font-family: inherit;
+      transition: border-color 0.15s;
+    }
+    .reply-input:focus { border-color: #6c63ff; }
+    .reply-submit {
+      background: #6c63ff; border: none; border-radius: 6px;
+      color: #fff; cursor: pointer; font-size: 0.9rem;
+      padding: 6px 12px; transition: opacity 0.15s;
+    }
+    .reply-submit:hover    { opacity: 0.8; }
+    .reply-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+    .reply-hint {
+      font-size: 0.78rem; color: #444; margin-top: 8px; font-style: italic;
+    }
+
+    /* ── PIN / Reclaim ── */
+    input[type="tel"] {
+      width: 100%; background: #111; border: 1px solid #333;
+      border-radius: 8px; color: #f0f0f0; font-size: 1.2rem;
+      padding: 10px 12px; outline: none; letter-spacing: 0.3em;
+      font-family: monospace; transition: border-color 0.15s;
+    }
+    input[type="tel"]:focus { border-color: #6c63ff; }
+
+    .reclaim-toggle {
+      background: none; border: none; color: #555;
+      font-size: 0.78rem; cursor: pointer; font-family: inherit;
+      margin-top: 14px; text-decoration: underline; display: block;
+      transition: color 0.15s;
+    }
+    .reclaim-toggle:hover { color: #aaa; }
+
+    .reclaim-section {
+      display: none; margin-top: 14px;
+      background: #111; border: 1px solid #2a2a2a;
+      border-radius: 10px; padding: 16px;
+    }
+    .reclaim-section.open { display: block; }
+    .reclaim-section h3 {
+      font-size: 0.85rem; color: #aaa; margin-bottom: 12px; font-weight: 600;
+    }
+    .reclaim-row { display: flex; gap: 8px; margin-top: 10px; }
+    .btn-reclaim {
+      background: #2a2a4a; color: #a0a0ff; border: none;
+      border-radius: 8px; padding: 10px 16px; font-size: 0.88rem;
+      font-weight: 600; cursor: pointer; font-family: inherit;
+      transition: opacity 0.15s; white-space: nowrap;
+    }
+    .btn-reclaim:hover { opacity: 0.8; }
+    .reclaim-msg {
+      font-size: 0.82rem; margin-top: 8px; padding: 8px 12px;
+      border-radius: 6px; display: none;
+    }
+    .reclaim-msg.ok  { background: #1a3a2a; color: #6fcf97; display: block; }
+    .reclaim-msg.err { background: #3a1a1a; color: #f08080; display: block; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Crew Meetup ❤️ Neuro Family</h1>
+  <p>Potluck · Litty & Paint · Fuck around and find out</p>
+  <div class="event-pills">
+    <span class="pill">📅 Sunday, June 14</span>
+    <span class="pill">🕔 5:00 PM</span>
+    <span class="pill">🏠 Armon's flat</span>
+  </div>
+</header>
+
+<div class="layout">
+  <div class="card">
+    <h2>✍️ Sign yourself up</h2>
+    <div class="editing-banner" id="editing-banner">
+      ✏️ Editing your response — make changes and hit Update.
+      <button class="cancel-edit" id="cancel-edit">Cancel</button>
+    </div>
+    <form id="signup-form">
+      <div class="form-group">
+        <label>Your name *</label>
+        <input type="text" id="name" placeholder="e.g. J" required />
+      </div>
+      <div class="form-group">
+        <label>Are you coming?</label>
+        <div class="radio-group" id="attending-group">
+          <label class="selected">
+            <input type="radio" name="attending" value="yes" checked />
+            <span>✅ Coming</span>
+          </label>
+          <label>
+            <input type="radio" name="attending" value="maybe" />
+            <span>🤔 Maybe</span>
+          </label>
+          <label>
+            <input type="radio" name="attending" value="no" />
+            <span>❌ Can't make it</span>
+          </label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>What are you bringing?</label>
+        <input type="text" id="bringing" placeholder="e.g. Charcuterie board, drinks, dessert…" />
+      </div>
+      <div class="form-group">
+        <label>Allergies / dietary restrictions</label>
+        <input type="text" id="allergies" placeholder="e.g. nut allergy, vegan, gluten-free…" />
+      </div>
+      <div class="form-group">
+        <label>Anything else? (optional)</label>
+        <textarea id="notes" placeholder="Questions, requests, hype…"></textarea>
+      </div>
+      <div class="form-group" id="pin-group">
+        <label>Set a 4-digit PIN * <span style="color:#555;text-transform:none;letter-spacing:0;font-size:0.75rem">— you'll use this to recover access on a new device</span></label>
+        <input type="tel" id="pin" placeholder="••••" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" required />
+      </div>
+      <button type="submit" id="submit-btn">Submit →</button>
+      <div class="success-msg" id="success-msg">🎉 You're on the list! See you there.</div>
+    </form>
+
+    <!-- Reclaim access -->
+    <button class="reclaim-toggle" id="reclaim-toggle">Lost access? Reclaim your spot →</button>
+    <div class="reclaim-section" id="reclaim-section">
+      <h3>🔑 Reclaim your spot</h3>
+      <div class="form-group">
+        <label>Your name</label>
+        <input type="text" id="reclaim-name" placeholder="Same name you signed up with" />
+      </div>
+      <div class="form-group">
+        <label>Your PIN</label>
+        <input type="tel" id="reclaim-pin" placeholder="••••" maxlength="4" inputmode="numeric" />
+      </div>
+      <button class="btn-reclaim" id="btn-reclaim">Reclaim →</button>
+      <div class="reclaim-msg" id="reclaim-msg"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>👥 Who's coming</h2>
+    <div class="count-label">Showing <span id="guest-count">0</span> response(s) · updates live</div>
+    <div id="guest-list">
+      <div class="empty-state">No responses yet — be the first!</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey:            "AIzaSyBydDeb4MR31KLE5UGpjBmarCBPyZY6Zag",
+    authDomain:        "crew-meetup-neurofamily.firebaseapp.com",
+    projectId:         "crew-meetup-neurofamily",
+    storageBucket:     "crew-meetup-neurofamily.firebasestorage.app",
+    messagingSenderId: "178561847327",
+    appId:             "1:178561847327:web:d7c2a9550cfc384de9c52a",
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db  = firebase.firestore();
+  const col = db.collection("responses");
+
+  const STORAGE_KEY  = 'crewEntryId';
+  const CREATOR_KEY  = 'crewCreator';
+  let editingId = null;
+  let nameIndex = {};
+  let myName    = '';
+
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function syncRadios(value) {
+    document.querySelectorAll('.radio-group label').forEach(lbl => {
+      const r = lbl.querySelector('input[type="radio"]');
+      if (value !== undefined) r.checked = r.value === value;
+      lbl.classList.toggle('selected', r && r.checked);
+    });
+  }
+  document.querySelectorAll('.radio-group label').forEach(lbl => {
+    lbl.addEventListener('click', () => {
+      lbl.closest('.radio-group').querySelectorAll('label').forEach(l => l.classList.remove('selected'));
+      lbl.classList.add('selected');
+    });
+  });
+
+  const form          = document.getElementById('signup-form');
+  const btn           = document.getElementById('submit-btn');
+  const success       = document.getElementById('success-msg');
+  const editingBanner = document.getElementById('editing-banner');
+  const cancelEdit    = document.getElementById('cancel-edit');
+
+  const pinGroup = document.getElementById('pin-group');
+  const pinInput = document.getElementById('pin');
+
+  // Only allow digits in PIN fields
+  ['pin', 'reclaim-pin'].forEach(id => {
+    document.getElementById(id).addEventListener('input', (e) => {
+      e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4);
+    });
+  });
+
+  function enterEditMode(docId, data) {
+    editingId = docId;
+    document.getElementById('name').value      = data.name      || '';
+    document.getElementById('bringing').value  = data.bringing  || '';
+    document.getElementById('allergies').value = data.allergies || '';
+    document.getElementById('notes').value     = data.notes     || '';
+    syncRadios(data.attending || 'yes');
+    pinGroup.style.display = 'none'; // hide PIN when editing
+    pinInput.removeAttribute('required');
+    btn.textContent = 'Update →';
+    editingBanner.classList.add('visible');
+    form.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function exitEditMode() {
+    editingId = null;
+    form.reset();
+    syncRadios('yes');
+    pinGroup.style.display = 'block';
+    pinInput.setAttribute('required', '');
+    btn.textContent = 'Submit →';
+    editingBanner.classList.remove('visible');
+  }
+
+  // ── Reclaim toggle ──
+  document.getElementById('reclaim-toggle').addEventListener('click', () => {
+    const sec = document.getElementById('reclaim-section');
+    const isOpen = sec.classList.toggle('open');
+    document.getElementById('reclaim-toggle').textContent =
+      isOpen ? '✕ Cancel' : 'Lost access? Reclaim your spot →';
+  });
+
+  // ── Reclaim submit ──
+  document.getElementById('btn-reclaim').addEventListener('click', async () => {
+    const rName = document.getElementById('reclaim-name').value.trim();
+    const rPin  = document.getElementById('reclaim-pin').value.trim();
+    const msg   = document.getElementById('reclaim-msg');
+    msg.className = 'reclaim-msg';
+
+    if (!rName || !/^\d{4}$/.test(rPin)) {
+      msg.textContent = 'Enter your name and 4-digit PIN.';
+      msg.classList.add('err'); return;
+    }
+
+    try {
+      const snap = await col.where('name', '==', rName).get();
+      const match = snap.docs.find(d => d.data().pin === rPin);
+      if (!match) {
+        msg.textContent = 'No match found. Check your name and PIN.';
+        msg.classList.add('err');
+      } else {
+        const docId = match.id;
+        localStorage.setItem(STORAGE_KEY, docId);
+        myName = rName;
+        msg.textContent = '✅ Access restored! You can now edit your response.';
+        msg.classList.add('ok');
+        document.getElementById('reclaim-section').classList.remove('open');
+        document.getElementById('reclaim-toggle').textContent = 'Lost access? Reclaim your spot →';
+      }
+    } catch (err) {
+      msg.textContent = 'Error: ' + err.message;
+      msg.classList.add('err');
+    }
+  });
+
+  cancelEdit.addEventListener('click', (e) => { e.preventDefault(); exitEditMode(); });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name      = document.getElementById('name').value.trim();
+    const attending = document.querySelector('input[name="attending"]:checked')?.value || 'yes';
+    const pin = document.getElementById('pin').value.trim();
+    const payload   = {
+      name, attending,
+      bringing:  document.getElementById('bringing').value.trim(),
+      allergies: document.getElementById('allergies').value.trim(),
+      notes:     document.getElementById('notes').value.trim(),
+      pin,
+    };
+    if (!name) return;
+    if (!editingId && (!/^\d{4}$/.test(pin))) {
+      alert('Please set a 4-digit numeric PIN.');
+      return;
+    }
+
+    if (!editingId) {
+      const myId    = localStorage.getItem(STORAGE_KEY);
+      const existId = nameIndex[name.toLowerCase()];
+      if (existId && existId !== myId) {
+        const overwrite = confirm(`"${name}" is already signed up.\n\nOverwrite their response? (contact Jayden if problem persists)`);
+        if (!overwrite) return;
+        btn.disabled = true; btn.textContent = 'Updating…';
+        try {
+          await col.doc(existId).update(payload);
+          localStorage.setItem(STORAGE_KEY, existId);
+          myName = name;
+          form.reset(); syncRadios('yes');
+          success.style.display = 'block';
+          setTimeout(() => { success.style.display = 'none'; }, 3500);
+        } catch (err) { alert('Error: ' + err.message); }
+        finally { btn.disabled = false; btn.textContent = 'Submit →'; }
+        return;
+      }
+    }
+
+    btn.disabled = true;
+    btn.textContent = editingId ? 'Updating…' : 'Submitting…';
+    try {
+      if (editingId) {
+        await col.doc(editingId).update(payload);
+        myName = name;
+        exitEditMode();
+      } else {
+        payload.submittedAt = firebase.firestore.FieldValue.serverTimestamp();
+        const docRef = await col.add(payload);
+        localStorage.setItem(STORAGE_KEY, docRef.id);
+        myName = name;
+        form.reset(); syncRadios('yes');
+      }
+      success.style.display = 'block';
+      setTimeout(() => { success.style.display = 'none'; }, 3500);
+    } catch (err) {
+      alert('Something went wrong: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = editingId ? 'Update →' : 'Submit →';
+    }
+  });
+
+  const list       = document.getElementById('guest-list');
+  const countLabel = document.getElementById('guest-count');
+
+  const statusMap = {
+    yes:   { label: '✅ Coming',        cls: 'status-yes'   },
+    maybe: { label: '🤔 Maybe',         cls: 'status-maybe' },
+    no:    { label: "❌ Can't make it", cls: 'status-no'    },
+  };
+
+  col.orderBy('submittedAt', 'asc').onSnapshot(snapshot => {
+    countLabel.textContent = snapshot.size;
+    const myId      = localStorage.getItem(STORAGE_KEY);
+    const isCreator = localStorage.getItem(CREATOR_KEY) === 'true';
+
+    nameIndex = {};
+    snapshot.forEach(doc => {
+      const n = (doc.data().name || '').toLowerCase();
+      nameIndex[n] = doc.id;
+      if (doc.id === myId) myName = doc.data().name || '';
+    });
+
+    if (snapshot.empty) {
+      list.innerHTML = '<div class="empty-state">No responses yet — be the first!</div>';
+      return;
+    }
+
+    list.innerHTML = '';
+    snapshot.forEach(doc => {
+      const d       = doc.data();
+      const st      = statusMap[d.attending] || statusMap['yes'];
+      const isMe    = doc.id === myId;
+      const replies = d.replies || [];
+
+      const card = document.createElement('div');
+      card.className = 'guest-card';
+
+      card.innerHTML = `
+        <div class="guest-name">
+          <span style="${isMe && isCreator ? 'color:#0ABAB5;font-weight:700;' : ''}">${escHtml(d.name || 'Anonymous')}</span>
+          ${isMe ? '<span style="font-size:0.72rem;color:#6c63ff;font-weight:500">(you)</span>' : ''}
+          <span class="status-badge ${st.cls}">${st.label}</span>
+        </div>
+        <div class="guest-meta">
+          ${d.bringing  ? `<span>🍽️ ${escHtml(d.bringing)}</span>`  : ''}
+          ${d.allergies ? `<span>⚠️ <span class="allergy-tag">${escHtml(d.allergies)}</span></span>` : ''}
+          ${d.notes     ? `<span>💬 ${escHtml(d.notes)}</span>`     : ''}
+        </div>
+        ${isMe ? `<div class="guest-actions">
+          <button class="btn-edit">✏️ Edit</button>
+          <button class="btn-delete">🗑 Delete</button>
+        </div>` : ''}
+        <div class="replies-section">
+          <div class="reply-list">
+            ${replies.map(r => `
+              <div class="reply-item">
+                <span class="reply-name ${r.creator ? 'creator' : ''}">${escHtml(r.name)}</span>
+                <span class="reply-text">${escHtml(r.text)}</span>
+              </div>`).join('')}
+          </div>
+          ${myId ? `
+            <button class="btn-reply-toggle">💬 Reply</button>
+            <div class="reply-form">
+              <input class="reply-input" type="text" placeholder="Reply…" maxlength="200" />
+              <button class="reply-submit">→</button>
+            </div>
+          ` : `<div class="reply-hint">✍️ Sign up first to leave a reply</div>`}
+        </div>
+      `;
+
+      if (isMe) {
+        card.querySelector('.btn-edit').addEventListener('click', () => enterEditMode(doc.id, d));
+        card.querySelector('.btn-delete').addEventListener('click', async () => {
+          if (!confirm('Remove your response?')) return;
+          await col.doc(doc.id).delete();
+          localStorage.removeItem(STORAGE_KEY);
+          myName = '';
+          exitEditMode();
+        });
+      }
+
+      if (myId) {
+        const toggleBtn  = card.querySelector('.btn-reply-toggle');
+        const replyForm  = card.querySelector('.reply-form');
+        const replyInput = card.querySelector('.reply-input');
+        const replyBtn   = card.querySelector('.reply-submit');
+
+        // Toggle reply box open/closed
+        toggleBtn.addEventListener('click', () => {
+          const isOpen = replyForm.classList.toggle('open');
+          toggleBtn.textContent = isOpen ? '✕ Cancel' : '💬 Reply';
+          if (isOpen) replyInput.focus();
+        });
+
+        async function submitReply() {
+          const text = replyInput.value.trim();
+          if (!text) return;
+          replyBtn.disabled = true;
+          try {
+            await col.doc(doc.id).update({
+              replies: firebase.firestore.FieldValue.arrayUnion({
+                name:    myName || 'You',
+                text,
+                creator: isCreator,
+                time:    new Date().toISOString(),
+              }),
+            });
+            replyInput.value = '';
+            // Collapse the reply box after sending
+            replyForm.classList.remove('open');
+            toggleBtn.textContent = '💬 Reply';
+          } catch (err) { alert('Reply error: ' + err.message); }
+          finally { replyBtn.disabled = false; }
+        }
+
+        replyBtn.addEventListener('click', submitReply);
+        replyInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitReply(); });
+      }
+
+      list.appendChild(card);
+    });
+  });
+</script>
+
+</body>
+</html>
