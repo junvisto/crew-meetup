@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crew Meetup 🪩</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f0f0f; color: #f0f0f0; min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      border-bottom: 1px solid #ffffff18;
+      padding: 28px 32px; text-align: center;
+    }
+    header h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.5px; }
+    header p  { margin-top: 6px; color: #aaa; font-size: 0.95rem; }
+    .event-pills { display: flex; gap: 10px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+    .pill { background: #ffffff12; border: 1px solid #ffffff20; border-radius: 999px; padding: 5px 14px; font-size: 0.82rem; color: #ccc; }
+
+    /* ── Main Countdown ── */
+    .countdown-wrap { margin-top: 20px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .cd-box { background: #ffffff0d; border: 1px solid #ffffff18; border-radius: 12px; padding: 10px 18px; min-width: 64px; text-align: center; }
+    .cd-num { font-size: 1.6rem; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; letter-spacing: -1px; line-height: 1; }
+    .cd-label { font-size: 0.65rem; color: #666; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 3px; }
+    .countdown-done { font-size: 1rem; color: #6fcf97; font-weight: 600; margin-top: 20px; }
+
+    /* ── Photo Wall Section ── */
+    .photo-wall-section { max-width: 1100px; margin: 0 auto; padding: 24px 24px 0; }
+
+    .photo-wall-top {
+      background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px;
+      padding: 18px 24px; margin-bottom: 14px;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    }
+    .photo-wall-left h2 { font-size: 1rem; font-weight: 600; color: #eee; }
+    .photo-wall-left p { font-size: 0.75rem; color: #555; margin-top: 2px; }
+
+    .reveal-badge {
+      font-size: 0.78rem; color: #777; background: #111;
+      border: 1px solid #2a2a2a; border-radius: 8px; padding: 6px 12px;
+      text-align: center;
+    }
+    .reveal-badge.revealed { color: #6fcf97; border-color: #2d6a4a; background: #1a3a2a; }
+    .reveal-cd-time { font-weight: 700; color: #f2994a; }
+
+    .btn-add-wall {
+      background: #6c63ff; color: #fff; border: none;
+      border-radius: 8px; padding: 8px 16px;
+      font-size: 0.88rem; font-weight: 600; cursor: pointer;
+      font-family: inherit; transition: opacity 0.15s; white-space: nowrap;
+    }
+    .btn-add-wall:hover { opacity: 0.85; }
+
+    /* Upload form */
+    .wall-upload-wrap {
+      display: none; background: #1a1a1a; border: 1px solid #2a2a2a;
+      border-radius: 12px; padding: 18px 20px; margin-bottom: 14px;
+    }
+    .wall-upload-wrap.open { display: block; }
+    .wall-upload-title { font-size: 0.85rem; color: #aaa; font-weight: 600; margin-bottom: 12px; }
+    .wall-upload-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; align-items: flex-end; }
+    .wall-upload-row .wfg { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 120px; }
+    .wall-upload-row label { font-size: 0.72rem; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
+    .wall-upload-file-label {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #111; border: 1px dashed #444; border-radius: 8px;
+      padding: 8px 14px; font-size: 0.82rem; color: #777; cursor: pointer;
+      transition: border-color 0.15s, color 0.15s; font-family: inherit;
+      white-space: nowrap; align-self: flex-end;
+    }
+    .wall-upload-file-label:hover { border-color: #6c63ff; color: #bbb; }
+    .wall-file-input { display: none; }
+    .wall-upload-actions { display: flex; gap: 8px; align-items: center; }
+    .btn-wall-submit {
+      background: #6c63ff; color: #fff; border: none;
+      border-radius: 8px; padding: 8px 18px;
+      font-size: 0.88rem; font-weight: 600; cursor: pointer;
+      font-family: inherit; transition: opacity 0.15s;
+    }
+    .btn-wall-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-wall-cancel {
+      background: none; border: none; color: #555; cursor: pointer;
+      font-size: 0.82rem; font-family: inherit; text-decoration: underline;
+    }
+    .wall-upload-status { font-size: 0.78rem; color: #6c63ff; margin-top: 6px; min-height: 1em; }
+    .wall-upload-status.err { color: #f08080; }
+
+    /* Photo grid */
+    .wall-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+    .wall-empty { text-align: center; color: #333; font-size: 0.88rem; padding: 32px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; }
+
+    /* Photo card */
+    .photo-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; overflow: hidden; animation: fadeIn 0.3s ease; }
+    .photo-img-wrap { width: 100%; aspect-ratio: 1; overflow: hidden; position: relative; background: #111; }
+    .photo-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .photo-img.blurred { filter: blur(22px) brightness(0.6); transform: scale(1.3); }
+    .photo-mosaic-label {
+      position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.55); border-radius: 6px;
+      padding: 2px 8px; font-size: 0.68rem; color: #777; white-space: nowrap;
+      pointer-events: none;
+    }
+    .photo-download-btn {
+      position: absolute; bottom: 6px; right: 6px;
+      background: rgba(0,0,0,0.75); border: 1px solid #444;
+      border-radius: 6px; color: #6fcf97; font-size: 0.7rem;
+      padding: 4px 9px; text-decoration: none; display: none;
+    }
+    .photo-del-btn {
+      position: absolute; top: 5px; right: 5px;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: rgba(240,80,80,0.85); border: none; color: #fff;
+      font-size: 0.65rem; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; padding: 0;
+    }
+    .photo-card-footer { padding: 8px 12px 4px; display: flex; align-items: center; gap: 8px; }
+    .photo-initial {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: #6c63ff22; border: 1px solid #6c63ff44;
+      color: #a0a0ff; font-weight: 700; font-size: 0.78rem;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .photo-time { font-size: 0.7rem; color: #444; }
+
+    /* Photo comments */
+    .photo-comments-section { padding: 4px 12px 10px; border-top: 1px solid #1e1e1e; }
+    .photo-comment-item { display: flex; gap: 6px; font-size: 0.78rem; margin-bottom: 4px; line-height: 1.4; }
+    .photo-comment-name { color: #a0a0ff; font-weight: 600; white-space: nowrap; }
+    .photo-comment-text { color: #bbb; }
+    .photo-comment-toggle {
+      background: none; border: none; color: #444; font-size: 0.72rem;
+      cursor: pointer; font-family: inherit; padding: 4px 0; transition: color 0.15s;
+    }
+    .photo-comment-toggle:hover { color: #888; }
+    .photo-comment-form { display: none; gap: 5px; margin-top: 6px; }
+    .photo-comment-form.open { display: flex; }
+    .photo-comment-input {
+      flex: 1; background: #0d0d0d; border: 1px solid #2a2a2a;
+      border-radius: 6px; color: #f0f0f0; font-size: 0.78rem;
+      padding: 5px 8px; outline: none; font-family: inherit;
+    }
+    .photo-comment-submit {
+      background: #6c63ff; border: none; border-radius: 6px;
+      color: #fff; cursor: pointer; font-size: 0.82rem; padding: 5px 10px;
+    }
+    .photo-comment-hint { font-size: 0.72rem; color: #333; font-style: italic; padding: 4px 0; }
+
+    /* ── Layout ── */
+    .layout { display: grid; grid-template-columns: 1fr 1fr; max-width: 1100px; margin: 0 auto; padding: 24px 24px 32px; gap: 24px; }
+    @media (max-width: 720px) { .layout { grid-template-columns: 1fr; } }
+
+    /* ── Accordion cards ── */
+    .left-stack { display: flex; flex-direction: column; gap: 12px; }
+    .acc-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; overflow: hidden; }
+    .acc-toggle {
+      width: 100%; background: none; border: none; color: #eee;
+      font-size: 1rem; font-weight: 600; padding: 18px 24px;
+      display: flex; justify-content: space-between; align-items: center;
+      cursor: pointer; font-family: inherit; text-align: left;
+      transition: background 0.15s;
+    }
+    .acc-toggle:hover:not(.party-locked) { background: #ffffff06; }
+    .acc-toggle.party-locked { color: #444; cursor: not-allowed; }
+    .acc-toggle .chevron { font-size: 0.8rem; transition: transform 0.2s; display: inline-block; }
+    .acc-toggle.open .chevron { transform: rotate(180deg); }
+    .acc-body { padding: 0 24px 24px; }
+
+    /* Guest card / form shared styles */
+    .card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 28px; }
+    .card h2 { font-size: 1.05rem; font-weight: 600; margin-bottom: 20px; color: #eee; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 0.82rem; color: #888; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+    input[type="text"], textarea {
+      width: 100%; background: #111; border: 1px solid #333; border-radius: 8px;
+      color: #f0f0f0; font-size: 0.95rem; padding: 10px 12px; outline: none;
+      transition: border-color 0.15s; font-family: inherit;
+    }
+    input[type="text"]:focus, textarea:focus { border-color: #6c63ff; }
+    textarea { resize: vertical; min-height: 70px; }
+    input[type="tel"] {
+      width: 100%; background: #111; border: 1px solid #333; border-radius: 8px;
+      color: #f0f0f0; font-size: 1.2rem; padding: 10px 12px; outline: none;
+      letter-spacing: 0.3em; font-family: monospace; transition: border-color 0.15s;
+    }
+    input[type="tel"]:focus { border-color: #6c63ff; }
+    .radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
+    .radio-group label {
+      display: flex; align-items: center; gap: 6px; background: #111;
+      border: 1px solid #333; border-radius: 8px; padding: 8px 14px; cursor: pointer;
+      font-size: 0.9rem; text-transform: none; letter-spacing: 0; color: #ccc;
+      transition: border-color 0.15s, background 0.15s; margin: 0;
+    }
+    .radio-group input[type="radio"] { display: none; }
+    .radio-group label.selected { border-color: #6c63ff; background: #6c63ff18; color: #fff; }
+    button[type="submit"] {
+      width: 100%; background: #6c63ff; color: #fff; border: none; border-radius: 8px;
+      padding: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 6px;
+      font-family: inherit; transition: background 0.15s, transform 0.1s;
+    }
+    button[type="submit"]:hover  { background: #5a52e0; }
+    button[type="submit"]:active { transform: scale(0.98); }
+    button[type="submit"]:disabled { background: #444; cursor: not-allowed; }
+    .success-msg { display: none; text-align: center; padding: 16px; border-radius: 8px; background: #1a3a2a; border: 1px solid #2d6a4a; color: #6fcf97; font-size: 0.95rem; margin-top: 12px; }
+    .editing-banner { display: none; background: #2a2a4a; border: 1px solid #4a4aaa; border-radius: 8px; padding: 10px 14px; font-size: 0.85rem; color: #a0a0ff; margin-bottom: 16px; }
+    .editing-banner.visible { display: block; }
+    .cancel-edit { background: none; border: none; color: #f08080; cursor: pointer; font-size: 0.82rem; margin-left: 8px; text-decoration: underline; font-family: inherit; }
+    .party-closed-msg { display: none; text-align: center; padding: 16px; color: #555; font-size: 0.88rem; font-style: italic; }
+
+    /* ── Reclaim ── */
+    .reclaim-msg { font-size: 0.82rem; margin-top: 8px; padding: 8px 12px; border-radius: 6px; display: none; }
+    .reclaim-msg.ok  { background: #1a3a2a; color: #6fcf97; display: block; }
+    .reclaim-msg.err { background: #3a1a1a; color: #f08080; display: block; }
+    .btn-reclaim { background: #2a2a4a; color: #a0a0ff; border: none; border-radius: 8px; padding: 10px 16px; font-size: 0.88rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity 0.15s; white-space: nowrap; }
+    .btn-reclaim:hover { opacity: 0.8; }
+
+    /* ── Guest list ── */
+    .count-label { font-size: 0.8rem; color: #555; margin-bottom: 14px; }
+    .count-label span { color: #888; font-weight: 600; }
+    #guest-list { display: flex; flex-direction: column; gap: 12px; }
+    .guest-card { background: #111; border: 1px solid #2a2a2a; border-radius: 10px; padding: 14px 16px; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .guest-name { font-weight: 600; font-size: 0.97rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .status-badge { font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; font-weight: 500; }
+    .status-yes   { background: #1a3a2a; color: #6fcf97; }
+    .status-maybe { background: #3a2e1a; color: #f2994a; }
+    .status-no    { background: #2a1a1a; color: #eb5757; }
+    .guest-meta { margin-top: 7px; font-size: 0.85rem; color: #888; display: flex; flex-direction: column; gap: 3px; }
+    .guest-meta span { display: flex; align-items: flex-start; gap: 6px; }
+    .allergy-tag { display: inline-block; background: #3a1a1a; color: #f08080; border-radius: 4px; padding: 1px 6px; font-size: 0.78rem; margin-top: 4px; }
+    .empty-state { text-align: center; color: #444; font-size: 0.9rem; padding: 32px 0; }
+    .guest-actions { display: flex; gap: 8px; margin-top: 10px; }
+    .btn-edit, .btn-delete { border: none; border-radius: 6px; padding: 5px 12px; font-size: 0.8rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
+    .btn-edit   { background: #2a2a4a; color: #a0a0ff; }
+    .btn-delete { background: #3a1a1a; color: #f08080; }
+    .btn-edit:hover, .btn-delete:hover { opacity: 0.75; }
+
+    /* ── Replies ── */
+    .replies-section { margin-top: 10px; padding-top: 10px; border-top: 1px solid #2a2a2a; }
+    .reply-item { display: flex; gap: 8px; font-size: 0.83rem; margin-bottom: 5px; line-height: 1.4; }
+    .reply-name { color: #a0a0ff; font-weight: 600; white-space: nowrap; }
+    .reply-name.creator { color: #0ABAB5; font-weight: 700; }
+    .reply-text { color: #bbb; }
+    .btn-reply-toggle { background: none; border: none; color: #555; font-size: 0.78rem; cursor: pointer; font-family: inherit; padding: 4px 0; margin-top: 6px; transition: color 0.15s; }
+    .btn-reply-toggle:hover { color: #aaa; }
+    .reply-form { display: none; gap: 6px; margin-top: 8px; }
+    .reply-form.open { display: flex; }
+    .reply-input { flex: 1; background: #0d0d0d; border: 1px solid #333; border-radius: 6px; color: #f0f0f0; font-size: 0.85rem; padding: 6px 10px; outline: none; font-family: inherit; }
+    .reply-input:focus { border-color: #6c63ff; }
+    .reply-submit { background: #6c63ff; border: none; border-radius: 6px; color: #fff; cursor: pointer; font-size: 0.9rem; padding: 6px 12px; }
+    .reply-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+    .reply-hint { font-size: 0.78rem; color: #444; margin-top: 8px; font-style: italic; }
+  </style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header>
+  <h1>Crew Meetup ❤️ Neuro Family</h1>
+  <p>Potluck · Litty & Paint · Fuck around and find out</p>
+  <div class="event-pills">
+    <span class="pill">📅 Sunday, June 14</span>
+    <span class="pill">🕔 5:00 PM</span>
+    <span class="pill">🏠 Armon's flat</span>
+  </div>
+  <div id="countdown-wrap" class="countdown-wrap">
+    <div class="cd-box"><div class="cd-num" id="cd-days">--</div><div class="cd-label">days</div></div>
+    <div class="cd-box"><div class="cd-num" id="cd-hours">--</div><div class="cd-label">hours</div></div>
+    <div class="cd-box"><div class="cd-num" id="cd-mins">--</div><div class="cd-label">mins</div></div>
+    <div class="cd-box"><div class="cd-num" id="cd-secs">--</div><div class="cd-label">secs</div></div>
+  </div>
+  <div id="countdown-done" class="countdown-done" style="display:none">🎉 It's party time!!</div>
+</header>
+
+<!-- ══ PHOTO WALL ══ -->
+<div class="photo-wall-section">
+  <div class="photo-wall-top">
+    <div class="photo-wall-left">
+      <h2>📸 The Wall</h2>
+      <p>Photos are mosaicked until the reveal 🫣</p>
+    </div>
+    <div id="reveal-badge" class="reveal-badge">
+      🔒 Reveals in <span id="reveal-cd-time" class="reveal-cd-time">--:--:--</span>
+    </div>
+    <button class="btn-add-wall" id="btn-add-wall">📷 Add to the wall</button>
+  </div>
+
+  <!-- Upload form -->
+  <div class="wall-upload-wrap" id="wall-upload-wrap">
+    <div class="wall-upload-title">📤 Upload your photos</div>
+    <div class="wall-upload-row">
+      <div class="wfg">
+        <label>Your name</label>
+        <input type="text" id="wall-name" placeholder="" />
+      </div>
+      <div class="wfg" style="max-width:130px;">
+        <label>PIN</label>
+        <input type="tel" id="wall-pin" placeholder="••••" maxlength="4" inputmode="numeric"
+          style="font-size:1rem;letter-spacing:0.2em;" />
+      </div>
+      <label class="wall-upload-file-label">
+        📁 Choose files
+        <input class="wall-file-input" id="wall-file-input" type="file" accept="image/*" multiple />
+      </label>
+    </div>
+    <div id="wall-file-name" style="font-size:0.75rem;color:#555;margin-bottom:8px;"></div>
+    <div class="wall-upload-actions">
+      <button class="btn-wall-submit" id="btn-wall-submit">Upload →</button>
+      <button class="btn-wall-cancel" id="btn-wall-cancel">Cancel</button>
+    </div>
+    <div class="wall-upload-status" id="wall-upload-status"></div>
+  </div>
+
+  <!-- Photo grid -->
+  <div id="wall-grid" class="wall-grid">
+    <div class="wall-empty">No photos yet — be the first to post! 📸</div>
+  </div>
+</div>
+
+<!-- ══ MAIN LAYOUT ══ -->
+<div class="layout">
+
+  <!-- Left: two accordion cards -->
+  <div class="left-stack">
+
+    <!-- Sign-up accordion -->
+    <div class="acc-card">
+      <button class="acc-toggle open" id="toggle-signup">
+        ✍️ Sign yourself up
+        <span class="chevron">▾</span>
+      </button>
+      <div class="acc-body" id="body-signup">
+        <div class="editing-banner" id="editing-banner">
+          ✏️ Editing your response — make changes and hit Update.
+          <button class="cancel-edit" id="cancel-edit">Cancel</button>
+        </div>
+        <form id="signup-form">
+          <div class="form-group">
+            <label>Your name *</label>
+            <input type="text" id="name" placeholder="" required />
+          </div>
+          <div class="form-group">
+            <label>Are you coming?</label>
+            <div class="radio-group" id="attending-group">
+              <label class="selected"><input type="radio" name="attending" value="yes" checked /><span>✅ Coming</span></label>
+              <label><input type="radio" name="attending" value="maybe" /><span>🤔 Maybe</span></label>
+              <label><input type="radio" name="attending" value="no" /><span>❌ Can't make it</span></label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>What are you bringing?</label>
+            <input type="text" id="bringing" placeholder="" />
+          </div>
+          <div class="form-group">
+            <label>Allergies / dietary restrictions</label>
+            <input type="text" id="allergies" placeholder="" />
+          </div>
+          <div class="form-group">
+            <label>Gasaps, requests, teas?</label>
+            <textarea id="notes" placeholder=""></textarea>
+          </div>
+          <div class="form-group" id="pin-group">
+            <label>Set a 4-digit PIN * <span style="color:#555;text-transform:none;letter-spacing:0;font-size:0.75rem">— you'll need this</span></label>
+            <input type="tel" id="pin" placeholder="••••" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" required />
+          </div>
+          <button type="submit" id="submit-btn">Submit →</button>
+          <div class="success-msg" id="success-msg">🎉 You're on the list! See you there.</div>
+        </form>
+        <div class="party-closed-msg" id="party-closed-msg">🎉 Party's started — sign-ups are closed!</div>
+      </div>
+    </div>
+
+    <!-- Reclaim accordion -->
+    <div class="acc-card">
+      <button class="acc-toggle" id="toggle-reclaim">
+        🔑 Lost access? Reclaim your spot
+        <span class="chevron">▾</span>
+      </button>
+      <div class="acc-body" id="body-reclaim" style="display:none">
+        <div class="form-group">
+          <label>Your name</label>
+          <input type="text" id="reclaim-name" placeholder="Same name you signed up with" />
+        </div>
+        <div class="form-group">
+          <label>Your PIN</label>
+          <input type="tel" id="reclaim-pin" placeholder="••••" maxlength="4" inputmode="numeric" />
+        </div>
+        <button class="btn-reclaim" id="btn-reclaim">Reclaim →</button>
+        <div class="reclaim-msg" id="reclaim-msg"></div>
+
+        <!-- Wrong PIN step 1 -->
+        <div id="honest-prompt" style="display:none;text-align:center;padding:16px 0 4px;">
+          <p style="color:#ccc;font-size:0.9rem;line-height:1.7;margin-bottom:14px;">
+            Can you be honest with the family...<br>are you <em>really</em> one of us? 🫂
+          </p>
+          <button id="btn-yes-family" class="btn-reclaim"
+            style="background:#1a3a2a;color:#6fcf97;border:1px solid #2d6a4a;width:100%;margin-bottom:8px;">
+            Yes 🙏
+          </button>
+          <button id="btn-try-again"
+            style="background:none;border:none;color:#555;font-size:0.78rem;cursor:pointer;font-family:inherit;text-decoration:underline;">
+            ← Wait, I remember my PIN
+          </button>
+        </div>
+
+        <!-- Wrong PIN step 2 -->
+        <div id="reset-pin-prompt" style="display:none;padding:8px 0 0;">
+          <p style="color:#6fcf97;font-size:0.88rem;line-height:1.6;margin-bottom:12px;">
+            Glad you chose the right answer 💚<br>Now reset your PIN — it's yours.
+          </p>
+          <div class="form-group" style="margin-bottom:10px;">
+            <label>New 4-digit PIN</label>
+            <input type="tel" id="new-pin" placeholder="••••" maxlength="4" inputmode="numeric" />
+          </div>
+          <button class="btn-reclaim" id="btn-confirm-reset" style="width:100%;">Set my PIN →</button>
+        </div>
+
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid #1e1e1e;">
+          <span style="font-size:0.78rem;color:#444;">Problem persists? </span>
+          <a href="mailto:anubb68@gmail.com?subject=Crew%20Meetup%20-%20Access%20Issue"
+             style="font-size:0.78rem;color:#6c63ff;text-decoration:none;">Message the admin →</a>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /left-stack -->
+
+  <!-- Right: guest list -->
+  <div class="card">
+    <h2>👥 Family Member</h2>
+    <div class="count-label">Showing <span id="guest-count">0</span> response(s) · updates live</div>
+    <div id="guest-list">
+      <div class="empty-state">No responses yet — be the first!</div>
+    </div>
+  </div>
+
+</div><!-- /layout -->
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<script>
+
+// ══════════════════════════════════════════════
+// TIMERS
+// ══════════════════════════════════════════════
+
+const EVENT_TIME  = new Date('2026-06-14T17:00:00-07:00');   // Party start (Las Vegas PDT)
+const REVEAL_TIME = new Date('2026-06-15T05:00:00-07:00');   // 12 h after party
+
+let partyStarted  = false;
+let photosRevealed = Date.now() >= REVEAL_TIME.getTime();
+
+function pad(n) { return String(n).padStart(2, '0'); }
+
+function updateMainCountdown() {
+  const diff = EVENT_TIME.getTime() - Date.now();
+  if (diff <= 0) {
+    document.getElementById('countdown-wrap').style.display = 'none';
+    document.getElementById('countdown-done').style.display = 'block';
+    if (!partyStarted) { partyStarted = true; lockSignupForm(); }
+    return;
+  }
+  const s = Math.floor(diff / 1000);
+  document.getElementById('cd-days').textContent  = Math.floor(s / 86400);
+  document.getElementById('cd-hours').textContent = pad(Math.floor((s % 86400) / 3600));
+  document.getElementById('cd-mins').textContent  = pad(Math.floor((s % 3600) / 60));
+  document.getElementById('cd-secs').textContent  = pad(s % 60);
+}
+
+function updateRevealCountdown() {
+  const diff = REVEAL_TIME.getTime() - Date.now();
+  const badge = document.getElementById('reveal-badge');
+  if (diff <= 0) {
+    badge.className = 'reveal-badge revealed';
+    badge.innerHTML = '🎉 Photos revealed! Download below.';
+    if (!photosRevealed) { photosRevealed = true; rerenderWallGrid(); }
+    return;
+  }
+  const s = Math.floor(diff / 1000);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sc = s % 60;
+  document.getElementById('reveal-cd-time').textContent = `${pad(h)}:${pad(m)}:${pad(sc)}`;
+}
+
+updateMainCountdown();
+updateRevealCountdown();
+setInterval(updateMainCountdown,  1000);
+setInterval(updateRevealCountdown, 1000);
+
+// ══════════════════════════════════════════════
+// FIREBASE
+// ══════════════════════════════════════════════
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyBydDeb4MR31KLE5UGpjBmarCBPyZY6Zag",
+  authDomain:        "crew-meetup-neurofamily.firebaseapp.com",
+  projectId:         "crew-meetup-neurofamily",
+  storageBucket:     "crew-meetup-neurofamily.firebasestorage.app",
+  messagingSenderId: "178561847327",
+  appId:             "1:178561847327:web:d7c2a9550cfc384de9c52a",
+};
+firebase.initializeApp(firebaseConfig);
+const db       = firebase.firestore();
+const storage  = firebase.storage();
+const col      = db.collection("responses");
+const wallCol  = db.collection("wall_photos");
+
+const STORAGE_KEY = 'crewEntryId';
+const CREATOR_KEY = 'crewCreator';
+let editingId = null;
+let nameIndex = {};
+let myName    = '';
+
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function relTime(ts) {
+  const ms = ts?.toDate ? ts.toDate().getTime() : new Date(ts).getTime();
+  const m = Math.floor((Date.now() - ms) / 60000);
+  if (m < 1)  return 'just now';
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h/24)}d ago`;
+}
+
+// ══════════════════════════════════════════════
+// SIGN-UP ACCORDION
+// ══════════════════════════════════════════════
+
+function lockSignupForm() {
+  const toggle = document.getElementById('toggle-signup');
+  const body   = document.getElementById('body-signup');
+  toggle.classList.remove('open');
+  toggle.classList.add('party-locked');
+  toggle.querySelector('.chevron').style.display = 'none';
+  body.style.display = 'none';
+  document.getElementById('party-closed-msg').style.display = 'block';
+  // Disable all form inputs
+  document.getElementById('signup-form').querySelectorAll('input,textarea,button').forEach(el => el.disabled = true);
+}
+
+document.getElementById('toggle-signup').addEventListener('click', () => {
+  const toggle = document.getElementById('toggle-signup');
+  if (toggle.classList.contains('party-locked')) return;
+  const body = document.getElementById('body-signup');
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  toggle.classList.toggle('open', !isOpen);
+});
+
+// Apply lock immediately if party already started
+if (Date.now() >= EVENT_TIME.getTime()) lockSignupForm();
+
+// ══════════════════════════════════════════════
+// RECLAIM ACCORDION
+// ══════════════════════════════════════════════
+
+document.getElementById('toggle-reclaim').addEventListener('click', () => {
+  const toggle = document.getElementById('toggle-reclaim');
+  const body   = document.getElementById('body-reclaim');
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  toggle.classList.toggle('open', !isOpen);
+});
+
+// ══════════════════════════════════════════════
+// RADIO SYNC
+// ══════════════════════════════════════════════
+
+function syncRadios(value) {
+  document.querySelectorAll('.radio-group label').forEach(lbl => {
+    const r = lbl.querySelector('input[type="radio"]');
+    if (value !== undefined) r.checked = r.value === value;
+    lbl.classList.toggle('selected', r && r.checked);
+  });
+}
+document.querySelectorAll('.radio-group label').forEach(lbl => {
+  lbl.addEventListener('click', () => {
+    lbl.closest('.radio-group').querySelectorAll('label').forEach(l => l.classList.remove('selected'));
+    lbl.classList.add('selected');
+  });
+});
+
+// ══════════════════════════════════════════════
+// PIN DIGIT FILTER
+// ══════════════════════════════════════════════
+
+['pin','reclaim-pin','new-pin','wall-pin'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g,'').slice(0,4); });
+});
+
+// ══════════════════════════════════════════════
+// SIGN-UP FORM
+// ══════════════════════════════════════════════
+
+const form          = document.getElementById('signup-form');
+const btn           = document.getElementById('submit-btn');
+const success       = document.getElementById('success-msg');
+const editingBanner = document.getElementById('editing-banner');
+const pinGroup      = document.getElementById('pin-group');
+const pinInput      = document.getElementById('pin');
+
+function enterEditMode(docId, data) {
+  editingId = docId;
+  document.getElementById('name').value      = data.name      || '';
+  document.getElementById('bringing').value  = data.bringing  || '';
+  document.getElementById('allergies').value = data.allergies || '';
+  document.getElementById('notes').value     = data.notes     || '';
+  syncRadios(data.attending || 'yes');
+  pinGroup.style.display = 'none';
+  pinInput.removeAttribute('required');
+  btn.textContent = 'Update →';
+  editingBanner.classList.add('visible');
+  document.getElementById('body-signup').style.display = 'block';
+  document.getElementById('toggle-signup').classList.add('open');
+  form.scrollIntoView({ behavior: 'smooth' });
+}
+
+function exitEditMode() {
+  editingId = null;
+  form.reset();
+  syncRadios('yes');
+  pinGroup.style.display = 'block';
+  pinInput.setAttribute('required', '');
+  btn.textContent = 'Submit →';
+  editingBanner.classList.remove('visible');
+}
+
+document.getElementById('cancel-edit').addEventListener('click', e => { e.preventDefault(); exitEditMode(); });
+
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  const name      = document.getElementById('name').value.trim();
+  const attending = document.querySelector('input[name="attending"]:checked')?.value || 'yes';
+  const pin       = document.getElementById('pin').value.trim();
+  const payload   = { name, attending, bringing: document.getElementById('bringing').value.trim(), allergies: document.getElementById('allergies').value.trim(), notes: document.getElementById('notes').value.trim(), pin };
+  if (!name) return;
+  if (!editingId && !/^\d{4}$/.test(pin)) { alert('Please set a 4-digit numeric PIN.'); return; }
+
+  if (!editingId) {
+    const myId    = localStorage.getItem(STORAGE_KEY);
+    const existId = nameIndex[name.toLowerCase()];
+    if (existId && existId !== myId) {
+      const overwrite = confirm(`"${name}" is already signed up.\n\nOverwrite their response?`);
+      if (!overwrite) return;
+      btn.disabled = true; btn.textContent = 'Updating…';
+      try {
+        await col.doc(existId).update(payload);
+        localStorage.setItem(STORAGE_KEY, existId);
+        myName = name;
+        form.reset(); syncRadios('yes');
+        success.style.display = 'block';
+        setTimeout(() => { success.style.display = 'none'; }, 3500);
+      } catch(err) { alert('Error: ' + err.message); }
+      finally { btn.disabled = false; btn.textContent = 'Submit →'; }
+      return;
+    }
+  }
+
+  btn.disabled = true;
+  btn.textContent = editingId ? 'Updating…' : 'Submitting…';
+  try {
+    if (editingId) {
+      await col.doc(editingId).update(payload);
+      myName = name;
+      exitEditMode();
+    } else {
+      payload.submittedAt = firebase.firestore.FieldValue.serverTimestamp();
+      const docRef = await col.add(payload);
+      localStorage.setItem(STORAGE_KEY, docRef.id);
+      myName = name;
+      form.reset(); syncRadios('yes');
+    }
+    success.style.display = 'block';
+    setTimeout(() => { success.style.display = 'none'; }, 3500);
+  } catch(err) { alert('Something went wrong: ' + err.message); }
+  finally { btn.disabled = false; btn.textContent = editingId ? 'Update →' : 'Submit →'; }
+});
+
+// ══════════════════════════════════════════════
+// RECLAIM FLOW
+// ══════════════════════════════════════════════
+
+let reclaimDocId = null;
+
+function resetReclaimUI() {
+  document.getElementById('reclaim-msg').className = 'reclaim-msg';
+  document.getElementById('honest-prompt').style.display = 'none';
+  document.getElementById('reset-pin-prompt').style.display = 'none';
+  document.getElementById('btn-reclaim').style.display = 'inline-block';
+  document.getElementById('reclaim-name').value = '';
+  document.getElementById('reclaim-pin').value  = '';
+  if (document.getElementById('new-pin')) document.getElementById('new-pin').value = '';
+  reclaimDocId = null;
+}
+
+document.getElementById('btn-reclaim').addEventListener('click', async () => {
+  const rName = document.getElementById('reclaim-name').value.trim();
+  const rPin  = document.getElementById('reclaim-pin').value.trim();
+  const msg   = document.getElementById('reclaim-msg');
+  msg.className = 'reclaim-msg';
+
+  if (!rName || !/^\d{4}$/.test(rPin)) {
+    msg.textContent = 'Enter your name and 4-digit PIN.';
+    msg.classList.add('err'); return;
+  }
+  try {
+    const snap  = await col.where('name', '==', rName).get();
+    const match = snap.docs.find(d => d.data().pin === rPin);
+    if (match) {
+      localStorage.setItem(STORAGE_KEY, match.id);
+      myName = rName;
+      msg.textContent = '✅ Access restored! Reloading…';
+      msg.classList.add('ok');
+      setTimeout(() => location.reload(), 1200);
+    } else if (snap.size > 0) {
+      reclaimDocId = snap.docs[0].id;
+      document.getElementById('btn-reclaim').style.display = 'none';
+      document.getElementById('honest-prompt').style.display = 'block';
+    } else {
+      msg.textContent = 'No match found. Check your name and PIN.';
+      msg.classList.add('err');
+    }
+  } catch(err) {
+    document.getElementById('reclaim-msg').textContent = 'Error: ' + err.message;
+    document.getElementById('reclaim-msg').classList.add('err');
+  }
+});
+
+// "Wait, I remember my PIN" → try again
+document.getElementById('btn-try-again').addEventListener('click', () => {
+  resetReclaimUI();
+  document.getElementById('reclaim-pin').focus();
+});
+
+// "Yes 🙏"
+document.getElementById('btn-yes-family').addEventListener('click', () => {
+  document.getElementById('honest-prompt').style.display = 'none';
+  document.getElementById('reset-pin-prompt').style.display = 'block';
+});
+
+// Set new PIN
+document.getElementById('btn-confirm-reset').addEventListener('click', async () => {
+  const newPin   = document.getElementById('new-pin').value.trim();
+  const resetBtn = document.getElementById('btn-confirm-reset');
+  if (!/^\d{4}$/.test(newPin)) { alert('Please enter a valid 4-digit PIN.'); return; }
+  resetBtn.disabled = true; resetBtn.textContent = 'Saving…';
+  try {
+    await col.doc(reclaimDocId).update({ pin: newPin });
+    localStorage.setItem(STORAGE_KEY, reclaimDocId);
+    const msg = document.getElementById('reclaim-msg');
+    msg.textContent = '✅ PIN updated! Reloading…';
+    msg.className = 'reclaim-msg ok';
+    setTimeout(() => location.reload(), 1200);
+  } catch(err) {
+    alert('Error: ' + err.message);
+    resetBtn.disabled = false; resetBtn.textContent = 'Set my PIN →';
+  }
+});
+
+// ══════════════════════════════════════════════
+// PHOTO WALL
+// ══════════════════════════════════════════════
+
+let wallSnapshot = null; // cache for re-render on reveal
+
+// Toggle upload form
+document.getElementById('btn-add-wall').addEventListener('click', () => {
+  const wrap = document.getElementById('wall-upload-wrap');
+  wrap.classList.toggle('open');
+});
+document.getElementById('btn-wall-cancel').addEventListener('click', () => {
+  document.getElementById('wall-upload-wrap').classList.remove('open');
+  document.getElementById('wall-upload-status').textContent = '';
+});
+
+// Show selected filenames
+document.getElementById('wall-file-input').addEventListener('change', e => {
+  const files = e.target.files;
+  document.getElementById('wall-file-name').textContent = files.length
+    ? `${files.length} file(s) selected: ${Array.from(files).map(f => f.name).join(', ')}`
+    : '';
+});
+
+// Upload
+document.getElementById('btn-wall-submit').addEventListener('click', async () => {
+  const name    = document.getElementById('wall-name').value.trim();
+  const pin     = document.getElementById('wall-pin').value.trim();
+  const files   = document.getElementById('wall-file-input').files;
+  const statusEl = document.getElementById('wall-upload-status');
+  const uploadBtn = document.getElementById('btn-wall-submit');
+
+  statusEl.className = 'wall-upload-status';
+
+  if (!name) { statusEl.textContent = 'Enter your name.'; statusEl.className += ' err'; return; }
+  if (!/^\d{4}$/.test(pin)) { statusEl.textContent = 'Enter your 4-digit PIN.'; statusEl.className += ' err'; return; }
+  if (!files.length) { statusEl.textContent = 'Choose at least one photo.'; statusEl.className += ' err'; return; }
+
+  // Verify name + PIN
+  statusEl.textContent = 'Verifying…';
+  let uploaderDocId = null;
+  try {
+    const snap  = await col.where('name', '==', name).get();
+    const match = snap.docs.find(d => d.data().pin === pin);
+    if (!match) {
+      statusEl.textContent = 'Name or PIN doesn\'t match. Check and try again.';
+      statusEl.className += ' err'; return;
+    }
+    uploaderDocId = match.id;
+  } catch(err) { statusEl.textContent = 'Error: ' + err.message; statusEl.className += ' err'; return; }
+
+  // Check upload count (max 10)
+  const existingSnap = await wallCol.where('uploaderDocId', '==', uploaderDocId).get();
+  const used = existingSnap.size;
+  const MAX = 10;
+  if (used >= MAX) {
+    statusEl.textContent = `You've already uploaded ${used} photos (max ${MAX}).`;
+    statusEl.className += ' err'; return;
+  }
+
+  const available = MAX - used;
+  const toUpload  = Array.from(files).slice(0, available);
+  uploadBtn.disabled = true;
+
+  let uploaded = 0;
+  for (const file of toUpload) {
+    statusEl.textContent = `Uploading ${uploaded + 1}/${toUpload.length}…`;
+    try {
+      const path    = `wall/${uploaderDocId}/${Date.now()}_${file.name}`;
+      const ref     = storage.ref(path);
+      const snap2   = await ref.put(file);
+      const url     = await snap2.ref.getDownloadURL();
+      await wallCol.add({
+        uploaderDocId,
+        uploaderName:    name,
+        uploaderInitial: name.charAt(0).toUpperCase(),
+        url, path,
+        uploadedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        comments: [],
+      });
+      uploaded++;
+    } catch(err) {
+      statusEl.textContent = 'Upload error: ' + err.message;
+      statusEl.className += ' err';
+      uploadBtn.disabled = false; return;
+    }
+  }
+
+  const overLimit = files.length > available;
+  statusEl.textContent = `✅ ${uploaded} photo(s) uploaded!${overLimit ? ` (${MAX} max reached)` : ''}`;
+  document.getElementById('wall-file-input').value = '';
+  document.getElementById('wall-file-name').textContent = '';
+  uploadBtn.disabled = false;
+  setTimeout(() => {
+    document.getElementById('wall-upload-wrap').classList.remove('open');
+    statusEl.textContent = '';
+  }, 2500);
+});
+
+// Render wall grid
+function renderWall(docs) {
+  const grid  = document.getElementById('wall-grid');
+  const myId  = localStorage.getItem(STORAGE_KEY);
+  const isCreator = localStorage.getItem(CREATOR_KEY) === 'true';
+  const revealed  = Date.now() >= REVEAL_TIME.getTime();
+
+  if (!docs || docs.length === 0) {
+    grid.innerHTML = '<div class="wall-empty">No photos yet — be the first to post! 📸</div>';
+    return;
+  }
+
+  grid.innerHTML = '';
+  docs.forEach(doc => {
+    const d       = doc.data();
+    const canDel  = isCreator || (myId && myId === d.uploaderDocId);
+    const comments = d.comments || [];
+
+    const card = document.createElement('div');
+    card.className = 'photo-card';
+
+    card.innerHTML = `
+      <div class="photo-img-wrap">
+        <img class="photo-img${revealed ? '' : ' blurred'}"
+          src="${escHtml(d.url)}" alt=""
+          onerror="this.style.opacity='0.2'" />
+        ${!revealed ? '<div class="photo-mosaic-label">mosaicked 🫣</div>' : ''}
+        ${revealed ? `<a class="photo-download-btn" href="${escHtml(d.url)}" download target="_blank" style="display:block;">⬇ Download</a>` : ''}
+        ${canDel ? `<button class="photo-del-btn" title="Delete">×</button>` : ''}
+      </div>
+      <div class="photo-card-footer">
+        <div class="photo-initial">${escHtml(d.uploaderInitial || '?')}</div>
+        <span class="photo-time">${d.uploadedAt ? relTime(d.uploadedAt) : 'just now'}</span>
+      </div>
+      <div class="photo-comments-section">
+        ${comments.map(c => `
+          <div class="photo-comment-item">
+            <span class="photo-comment-name">${escHtml(c.name)}</span>
+            <span class="photo-comment-text">${escHtml(c.text)}</span>
+          </div>`).join('')}
+        ${myId
+          ? `<button class="photo-comment-toggle">💬 Comment</button>
+             <div class="photo-comment-form">
+               <input class="photo-comment-input" type="text" placeholder="Say something…" maxlength="200" />
+               <button class="photo-comment-submit">→</button>
+             </div>`
+          : `<div class="photo-comment-hint">Sign up to comment</div>`}
+      </div>
+    `;
+
+    // Delete
+    const delBtn = card.querySelector('.photo-del-btn');
+    if (delBtn) {
+      delBtn.addEventListener('click', async () => {
+        if (!confirm('Delete this photo?')) return;
+        try { await storage.ref(d.path).delete(); } catch(_) {}
+        try { await wallCol.doc(doc.id).delete(); } catch(err) { alert('Delete error: ' + err.message); }
+      });
+    }
+
+    // Comments
+    if (myId) {
+      const toggleBtn = card.querySelector('.photo-comment-toggle');
+      const commentForm = card.querySelector('.photo-comment-form');
+      const commentInput = card.querySelector('.photo-comment-input');
+      const commentSubmit = card.querySelector('.photo-comment-submit');
+
+      toggleBtn.addEventListener('click', () => {
+        const open = commentForm.classList.toggle('open');
+        toggleBtn.textContent = open ? '✕ Cancel' : '💬 Comment';
+        if (open) commentInput.focus();
+      });
+
+      async function submitComment() {
+        const text = commentInput.value.trim();
+        if (!text) return;
+        commentSubmit.disabled = true;
+        try {
+          await wallCol.doc(doc.id).update({
+            comments: firebase.firestore.FieldValue.arrayUnion({
+              name: myName || 'You',
+              text,
+              time: new Date().toISOString(),
+            }),
+          });
+          commentInput.value = '';
+          commentForm.classList.remove('open');
+          toggleBtn.textContent = '💬 Comment';
+        } catch(err) { alert('Comment error: ' + err.message); }
+        finally { commentSubmit.disabled = false; }
+      }
+
+      commentSubmit.addEventListener('click', submitComment);
+      commentInput.addEventListener('keydown', e => { if (e.key === 'Enter') submitComment(); });
+    }
+
+    grid.appendChild(card);
+  });
+}
+
+function rerenderWallGrid() {
+  if (wallSnapshot) renderWall(wallSnapshot);
+}
+
+// Live photo wall
+wallCol.orderBy('uploadedAt', 'asc').onSnapshot(snap => {
+  wallSnapshot = snap.docs;
+  renderWall(snap.docs);
+});
+
+// ══════════════════════════════════════════════
+// GUEST LIST
+// ══════════════════════════════════════════════
+
+const list       = document.getElementById('guest-list');
+const countLabel = document.getElementById('guest-count');
+
+const statusMap = {
+  yes:   { label: '✅ Coming',        cls: 'status-yes'   },
+  maybe: { label: '🤔 Maybe',         cls: 'status-maybe' },
+  no:    { label: "❌ Can't make it", cls: 'status-no'    },
+};
+
+col.orderBy('submittedAt', 'asc').onSnapshot(snapshot => {
+  countLabel.textContent = snapshot.size;
+  const myId      = localStorage.getItem(STORAGE_KEY);
+  const isCreator = localStorage.getItem(CREATOR_KEY) === 'true';
+
+  nameIndex = {};
+  snapshot.forEach(doc => {
+    const n = (doc.data().name || '').toLowerCase();
+    nameIndex[n] = doc.id;
+    if (doc.id === myId) myName = doc.data().name || '';
+  });
+
+  if (snapshot.empty) {
+    list.innerHTML = '<div class="empty-state">No responses yet — be the first!</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  snapshot.forEach(doc => {
+    const d       = doc.data();
+    const st      = statusMap[d.attending] || statusMap['yes'];
+    const isMe    = doc.id === myId;
+    const replies = d.replies || [];
+
+    const card = document.createElement('div');
+    card.className = 'guest-card';
+    card.innerHTML = `
+      <div class="guest-name">
+        <span style="${isMe && isCreator ? 'color:#0ABAB5;font-weight:700;' : ''}">${escHtml(d.name || 'Anonymous')}</span>
+        ${isMe ? '<span style="font-size:0.72rem;color:#6c63ff;font-weight:500">(you)</span>' : ''}
+        <span class="status-badge ${st.cls}">${st.label}</span>
+      </div>
+      <div class="guest-meta">
+        ${d.bringing  ? `<span>🍽️ ${escHtml(d.bringing)}</span>`  : ''}
+        ${d.allergies ? `<span>⚠️ <span class="allergy-tag">${escHtml(d.allergies)}</span></span>` : ''}
+        ${d.notes     ? `<span>💬 ${escHtml(d.notes)}</span>`     : ''}
+      </div>
+      ${isMe ? `<div class="guest-actions">
+        <button class="btn-edit">✏️ Edit</button>
+        <button class="btn-delete">🗑 Delete</button>
+      </div>` : ''}
+      <div class="replies-section">
+        <div class="reply-list">
+          ${replies.map(r => `
+            <div class="reply-item">
+              <span class="reply-name ${r.creator ? 'creator' : ''}">${escHtml(r.name)}</span>
+              <span class="reply-text">${escHtml(r.text)}</span>
+            </div>`).join('')}
+        </div>
+        ${myId
+          ? `<button class="btn-reply-toggle">💬 Reply</button>
+             <div class="reply-form">
+               <input class="reply-input" type="text" placeholder="Reply…" maxlength="200" />
+               <button class="reply-submit">→</button>
+             </div>`
+          : `<div class="reply-hint">✍️ Sign up first to leave a reply</div>`}
+      </div>
+    `;
+
+    if (isMe) {
+      card.querySelector('.btn-edit').addEventListener('click', () => enterEditMode(doc.id, d));
+      card.querySelector('.btn-delete').addEventListener('click', async () => {
+        if (!confirm('Remove your response?')) return;
+        await col.doc(doc.id).delete();
+        localStorage.removeItem(STORAGE_KEY);
+        myName = '';
+        exitEditMode();
+      });
+    }
+
+    if (myId) {
+      const toggleBtn  = card.querySelector('.btn-reply-toggle');
+      const replyForm  = card.querySelector('.reply-form');
+      const replyInput = card.querySelector('.reply-input');
+      const replyBtn   = card.querySelector('.reply-submit');
+
+      toggleBtn.addEventListener('click', () => {
+        const open = replyForm.classList.toggle('open');
+        toggleBtn.textContent = open ? '✕ Cancel' : '💬 Reply';
+        if (open) replyInput.focus();
+      });
+
+      async function submitReply() {
+        const text = replyInput.value.trim();
+        if (!text) return;
+        replyBtn.disabled = true;
+        try {
+          await col.doc(doc.id).update({
+            replies: firebase.firestore.FieldValue.arrayUnion({ name: myName || 'You', text, creator: isCreator, time: new Date().toISOString() }),
+          });
+          replyInput.value = '';
+          replyForm.classList.remove('open');
+          toggleBtn.textContent = '💬 Reply';
+        } catch(err) { alert('Reply error: ' + err.message); }
+        finally { replyBtn.disabled = false; }
+      }
+
+      replyBtn.addEventListener('click', submitReply);
+      replyInput.addEventListener('keydown', e => { if (e.key === 'Enter') submitReply(); });
+    }
+
+    list.appendChild(card);
+  });
+});
+
+</script>
+</body>
+</html>
